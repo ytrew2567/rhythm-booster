@@ -1,0 +1,20 @@
+{
+  "name": "Rhythm Booster",
+  "short_name": "Rhythm",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#4CAF50",
+  "icons": [
+    {
+      "src": "Screenshot_2021-02-06-16-54-37-50_87e97a45f9a3192000df2c5452ac2d54.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
