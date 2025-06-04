@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自我升級</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧠 自我升級系統</h1>
+
+  <div class="section" id="task-section">
+    <h2>📌 今日任務</h2>
+    <p id="task">載入中...</p>
+    <button onclick="completeTask()">完成任務</button>
+    <p id="quote" style="font-style: italic; margin-top: 10px;"></p>
+  </div>
+
+  <!-- 其他模組區塊：之後我們會陸續加 -->
+  
+  <script>
+    // 任務清單
+const tasks = [
+  "看教學影片 5 分鐘",
+  "寫一小段心得或筆記",
+  "打 3 行 code",
+  "深呼吸＋靜坐 2 分鐘",
+  "站起來走路 + 拉筋"
+];
+
+// 激勵語錄
+const quotes = [
+  "行動是打破焦慮的唯一解藥。",
+  "你不需要馬上完成，只要現在動一下就好。",
+  "先做一點點，明天會更輕鬆。",
+  "你是可以被信任的自己。"
+];
+
+// 產生今日任務（依照日期決定任務）
+function getTodayTask() {
+  const date = new Date().getDate(); // 取得今天幾號
+  const task = tasks[date % tasks.length]; // 簡單輪播任務
+  document.getElementById("task").innerText = task;
+}
+
+// 完成任務時觸發
+function completeTask() {
+  const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+  document.getElementById("quote").innerText = randomQuote;
+
+  // 紀錄完成時間
+  const now = new Date().toLocaleString();
+  const taskText = document.getElementById("task").innerText;
+  const record = { time: now, task: taskText };
+
+  // 儲存在 localStorage
+  let history = JSON.parse(localStorage.getItem("taskHistory")) || [];
+  history.push(record);
+  localStorage.setItem("taskHistory", JSON.stringify(history));
+}
+
+// 畫面載入時執行
+window.onload = getTodayTask;
+
+  </script>
+
+</body>
+</html>

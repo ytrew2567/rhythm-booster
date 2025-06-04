@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#4CAF50" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Rhythm Booster" />
+  <title>Rhythm Booster - 任務管理</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+      text-align: center;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    .box {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+    button {
+      padding: 10px 18px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      margin: 5px 3px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    input[type=text] {
+      width: calc(100% - 100px);
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-right: 8px;
+      box-sizing: border-box;
+    }
+    ul {
+      padding-left: 20px;
+      margin: 0;
+      list-style-type: none;
+    }
+    li {
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #eee;
+    }
+    li.completed span.task-text {
+      text-decoration: line-through;
+      color: #888;
+    }
+    .task-text {
+      flex: 1;
+      margin-left: 8px;
+    }
+    .history-box ul {
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .theme-switcher {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .theme-switcher button {
+      margin: 0 6px;
+    }
+    .checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    .delete-btn {
+      background: #e74c3c;
+      font-weight: bold;
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-left: 10px;
+    }
+    .delete-btn:hover {
+      background: #c0392b;
+    }
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .box {
+        max-width: 100%;
+        padding: 15px;
+      }
+      button, input[type=text] {
+        font-size: 18px;
+      }
+      input[type=text] {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      li {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .delete-btn {
+        margin-left: 0;
+        margin-top: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>今日任務</h2>
+    <p id="today-task">載入中...</p>
+    <button onclick="completeTodayTask()">完成今日任務</button>
+    <p id="quote" style="font-style: italic; margin-top: 12px;"></p>
+  </div>
+
+  <div class="box">
+    <h2>專案任務</h2>
+    <div style="display:flex; flex-wrap: wrap; align-items:center; margin-bottom:10px;">
+      <input type="text" id="new-project-task" placeholder="輸入新任務" />
+      <button onclick="addProjectTask()">新增</button>
+    </div>
+    <ul id="project-task-list"></ul>
+  </div>
+
+  <div class="box history-box">
+    <h2>完成紀錄</h2>
+    <div id="history-list">
+      <p>載入中...</p>
+    </div>
+  </div>
+
+  <div class="theme-switcher">
+    <p>切換風格：</p>
+    <button onclick="setTheme('playful')">🎮 遊戲</button>
+    <button onclick="setTheme('minimal')">🧘 簡約</button>
+    <button onclick="setTheme('techy')">💻 工程</button>
+  </div>
+
+<script>
+  const todayTasks = [
+    "看教學影片 5 分鐘",
+    "修改一小段程式碼",
+    "寫 50 字心得",
+    "手機放一邊 10 分鐘",
+    "走動 + 拉筋 5 分鐘"
+  ];
+
+  const quotes = [
+    "行動是治癒焦慮的良藥，而不是思考。",
+    "你不需要一次完成所有，只需要開始。",
+    "做比完美更重要。",
+    "今天做一點，明天會更容易。",
+  ];
+
+  // 今天日期
+  function getTodayTask() {
+    const day = new Date().getDate();
+    return todayTasks[day % todayTasks.length];
+  }
+
+  // 顯示今天任務
+  function showTodayTask() {
+    document.getElementById('today-task').innerText = getTodayTask();
+  }
+
+  // 完成今日任務
+  function completeTodayTask() {
+    const task = getTodayTask();
+    addRecord(task);
+    showQuote();
+  }
+  function checkAfternoonReminder() {
+  const now = new Date();
+  const hour = now.getHours();
+  const shown = localStorage.getItem('afternoonReminderShown');
+
+  if (hour >= 14 && hour < 17 && shown !== 'true') {
+    document.getElementById('afternoon-reminder').style.display = 'block';
+    localStorage.setItem('afternoonReminderShown', 'true');
+  }
+}
+
+function dismissAfternoonReminder() {
+  document.getElementById('afternoon-reminder').style.display = 'none';
+}
+
+
+  // 專案任務資料格式: { id, text, done }
+  function loadProjectTasks() {
+    return JSON.parse(localStorage.getItem('projectTasks') || '[]');
+  }
+
+  function saveProjectTasks(tasks) {
+    localStorage.setItem('projectTasks', JSON.stringify(tasks));
+  }
+
+  // 顯示專案任務清單
+  function renderProjectTasks() {
+    const list = loadProjectTasks();
+    const ul = document.getElementById('project-task-list');
+    if(list.length === 0) {
+      ul.innerHTML = "<li>目前沒有專案任務。</li>";
+      return;
+    }
+    ul.innerHTML = '';
+    list.forEach(task => {
+      const li = document.createElement('li');
+      li.className = task.done ? 'completed' : '';
+      li.innerHTML = `
+        <input type="checkbox" class="checkbox" ${task.done ? 'checked' : ''} onchange="toggleProjectTask(${task.id})" />
+        <span class="task-text">${task.text}</span>
+        <button class="delete-btn" onclick="deleteProjectTask(${task.id})">刪除</button>
+      `;
+      ul.appendChild(li);
+    });
+  }
+
+  // 新增專案任務
+  function addProjectTask() {
+    const input = document.getElementById('new-project-task');
+    const text = input.value.trim();
+    if(text === '') {
+      alert('請輸入任務內容');
+      return;
+    }
+    let tasks = loadProjectTasks();
+    const id = Date.now();
+    tasks.push({id, text, done: false});
+    saveProjectTasks(tasks);
+    input.value = '';
+    renderProjectTasks();
+  }
+
+  // 切換專案任務完成狀態
+  function toggleProjectTask(id) {
+    let tasks = loadProjectTasks();
+    tasks = tasks.map(t => {
+      if(t.id === id) {
+        t.done = !t.done;
+        if(t.done) addRecord(t.text);
+      }
+      return t;
+    });
+    saveProjectTasks(tasks);
+    renderProjectTasks();
+  }
+
+  // 刪除專案任務
+  function deleteProjectTask(id) {
+    if(!confirm('確定要刪除這個任務嗎？')) return;
+    let tasks = loadProjectTasks();
+    tasks = tasks.filter(t => t.id !== id);
+    saveProjectTasks(tasks);
+    renderProjectTasks();
+  }
+
+  // 完成紀錄格式 { task, time }
+  function loadRecords() {
+    return JSON.parse(localStorage.getItem('taskRecords') || '[]');
+  }
+
+  function saveRecords(records) {
+    localStorage.setItem('taskRecords', JSON.stringify(records));
+  }
+
+  function addRecord(task) {
+    const records = loadRecords();
+    records.push({task, time: new Date().toLocaleString()});
+    saveRecords(records);
+    renderRecords();
+  }
+
+  function renderRecords() {
+    const records = loadRecords();
+    const box = document.getElementById('history-list');
+    if(records.length === 0) {
+      box.innerHTML = "<p>目前沒有任何完成紀錄。</p>";
+      return;
+    }
+    box.innerHTML = "<ul>" + records.map(r =>
+      `<li>${r.time} - ${r.task}</li>`
+    ).join('') + "</ul>";
+  }
+
+  function showQuote() {
+    const q = quotes[Math.floor(Math.random() * quotes.length)];
+    document.getElementById('quote').innerText = q;
+  }
+
+  // 主題切換
+  function setTheme(theme) {
+    switch(theme) {
+      case 'playful':
+        document.body.style.background = '#ffeaa7';
+        document.body.style.color = '#000';
+        break;
+      case 'minimal':
+        document.body.style.background = '#ecf0f1';
+        document.body.style.color = '#000';
+        break;
+      case 'techy':
+        document.body.style.background = '#2c3e50';
+        document.body.style.color = '#ecf0f1';
+        break;
+    }
+  }
+
+  // 初始化
+  function resetDailyFlags() {
+  const last = localStorage.getItem('lastVisitDate');
+  const today = new Date().toDateString();
+  if (last !== today) {
+    localStorage.setItem('afternoonReminderShown', 'false');
+    localStorage.setItem('lastVisitDate', today);
+  }
+}
+
+// 初始化
+resetDailyFlags();           // ← 新增這行
+showTodayTask();
+renderProjectTasks();
+renderRecords();
+checkAfternoonReminder();    // ← 新增這行
+
+  showTodayTask();
+  renderProjectTasks();
+  renderRecords();
+</script>
+
+<div class="box" id="afternoon-reminder" style="display: none;">
+  <h2>☕ 午後重啟提醒</h2>
+  <p id="afternoon-quote">你不是懶，只是身體需要一個轉場。</p>
+  <button onclick="dismissAfternoonReminder()">我知道了</button>
+</div>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('Service Worker 註冊成功:', reg.scope))
+        .catch(err => console.log('Service Worker 註冊失敗:', err));
+    });
+  }
+</script>
+
+</body>
+</html>
